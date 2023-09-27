@@ -1,0 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getDefaultLavaSpec = void 0;
+const api_collection_pb_1 = require("../grpc_web_services/lavanet/lava/spec/api_collection_pb");
+const spec_pb_1 = require("../grpc_web_services/lavanet/lava/spec/spec_pb");
+function getDefaultLavaSpec() {
+    const api = new api_collection_pb_1.Api();
+    api.setEnabled(true);
+    api.setName("abci_query");
+    api.setComputeUnits(10);
+    const apis = [];
+    apis.push(api);
+    const collectionData = new api_collection_pb_1.CollectionData();
+    collectionData.setApiInterface("tendermintrpc");
+    const apiCollection = new api_collection_pb_1.ApiCollection();
+    apiCollection.setEnabled(true);
+    apiCollection.setCollectionData(collectionData);
+    apiCollection.setApisList(apis);
+    const apiCollectionList = [];
+    apiCollectionList.push(apiCollection);
+    const spec = new spec_pb_1.Spec();
+    spec.setEnabled(true);
+    spec.setIndex("LAV1");
+    spec.setAverageBlockTime(30000);
+    spec.setAllowedBlockLagForQosSync(2);
+    spec.setBlockDistanceForFinalizedData(0);
+    spec.setBlocksInFinalizationProof(1);
+    spec.setApiCollectionsList(apiCollectionList);
+    return spec;
+}
+exports.getDefaultLavaSpec = getDefaultLavaSpec;
