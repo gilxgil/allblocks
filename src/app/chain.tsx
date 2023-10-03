@@ -1,62 +1,31 @@
 "use client";
 
-import { LavaSDK } from "@lavanet/lava-sdk";
+import { LavaSDK as LavaSDKLocal } from "../../bin/src/sdk/sdk";
 import { useState, useEffect, useRef } from "react";
-import { Card, Title, Tracker, Flex, Text, Color, Badge, Icon } from "@tremor/react";
-import { HandIcon } from "@heroicons/react/outline";
+import { Card, Title, Tracker, Flex, Text, Color, Badge } from "@tremor/react";
 
 interface RelayParseFunc {
   (res: string): number;
 }
 
-const evmRelayParse = (res: string): number => {
-  let ret;
-  try {
-    ret = JSON.parse(res);
-  } catch (error) {
-    console.log("evmRelayParse", error, res)
-  }
-  return Number(ret["result"]);
+const evmRelayParse = (res: any): number => {
+  return Number(res["result"]);
 };
 
-const cosmosRelayParse = (res: string): number => {
-  let ret;
-  try {
-    ret = JSON.parse(res);
-  } catch (error) {
-    console.log("cosmosRelayParse", error, res)
-  }
-  return Number(ret["block"]["header"]["height"]);
+const cosmosRelayParse = (res: any): number => {
+  return Number(res["block"]["header"]["height"]);
 };
 
-const aptosRelayParse = (res: string): number => {
-  let ret;
-  try {
-    ret = JSON.parse(res);
-  } catch (error) {
-    console.log("aptosRelayParse", error, res)
-  }
-  return Number(ret["block_height"]);
+const aptosRelayParse = (res: any): number => {
+  return Number(res["block_height"]);
 };
 
-const starkRelayParse = (res: string): number => {
-  let ret;
-  try {
-    ret = JSON.parse(res);
-  } catch (error) {
-    console.log("starkRelayParse", error, res)
-  }
-  return Number(ret["result"]);
+const starkRelayParse = (res: any): number => {
+  return Number(res["result"]);
 };
 
-const solanaRelayParse = (res: string): number => {
-  let ret;
-  try {
-    ret = JSON.parse(res);
-  } catch (error) {
-    console.log("solanaRelayParse", error, res)
-  }
-  return Number(ret["result"]);
+const solanaRelayParse = (res: any): number => {
+  return Number(res["result"]);
 };
 
 const parseToFunc: { [name: string]: RelayParseFunc } = {
@@ -102,15 +71,12 @@ export const Chain = (props: any) => {
   const [msAvgCount, setMsAvgCount] = useState(0);
   const blocktime = props.blockTimeSeconds * 1000;
   const currentSlotRef = useRef(0);
-  const [selectedChain, setSelectedChain] = useState('');
 
-  const [sdkInstance, setSdkInstance] = useState<null | LavaSDK>(
-    null
-  );
+  const [sdkInstance, setSdkInstance] = useState<null | LavaSDKLocal>(null);
   const [block, setBlock] = useState(0);
   const [sdkLoadTime, setSdkLoadTime] = useState(0);
 
-  const sdkInstanceRef = useRef<null | LavaSDK>(null);
+  const sdkInstanceRef = useRef<null | LavaSDKLocal>(null);
   const [getBlockNow, setGetBlockNow] = useState(0);
 
   const getBlock = async () => {
@@ -124,7 +90,7 @@ export const Chain = (props: any) => {
       const res = await sdkInstanceRef.current.sendRelay(props.relay);
       const t1 = performance.now();
       const latency = t1 - t0;
-      //
+
       const block = parseToFunc[props.relayParse](res);
       setBlock(block);
       setMsAvg((msAvg * msAvgCount + latency) / (msAvgCount + 1));
@@ -182,7 +148,8 @@ export const Chain = (props: any) => {
     let t;
     try {
       const t0 = performance.now();
-      t = await new LavaSDK(chainProps!.sdkConfig);
+      t = await LavaSDKLocal.create(chainProps!.sdkConfig);
+
       const t1 = performance.now();
       chainProps!.setSdkLoadTime(t1 - t0);
       chainProps!.setSdkInstance(t);
@@ -227,21 +194,16 @@ export const Chain = (props: any) => {
   return (
     <Card className="mx-auto">
       <Flex justifyContent="between" alignItems="center">
-        <Title>
-          {props.name}
-        </Title>
-        <div>
-          {props.testnet === "" ? (
-            <Badge size="lg" color="green">
-              Mainnet
-            </Badge>
-          ) : (
-            <Badge size="lg" color="red">
-              {props.testnet}
-            </Badge>
-          )}
-          <Icon icon={HandIcon} onClick={() => props.filterChain(props.chainId)} size="xs" className="cursor-pointer" variant="solid" />
-        </div>
+        <Title>{props.name}</Title>
+        {props.testnet === "" ? (
+          <Badge size="lg" color="green">
+            Mainnet
+          </Badge>
+        ) : (
+          <Badge size="lg" color="red">
+            {props.testnet}
+          </Badge>
+        )}
       </Flex>
       <Text>
         SDK load time{" "}

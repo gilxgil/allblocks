@@ -1,15 +1,7 @@
-"use client";
-
 import { Grid, Text, Title } from "@tremor/react";
-import { useState } from "react";
 import { TabList, Tab, TabGroup, TabPanels, TabPanel } from "@tremor/react";
 import { Chain } from "./chain";
-
-import {
-  LavaSDKOptions,
-  SendRelayOptions,
-  SendRestRelayOptions,
-} from "@lavanet/lava-sdk";
+import { LavaSDKOptions as LavaSDKOptionsLocal, SendRelayOptions, SendRestRelayOptions } from "../../bin/src/sdk/sdk";
 
 interface ChainDesc {
   name: string;
@@ -24,15 +16,16 @@ interface ChainDesc {
 const evmRelay = {
   method: "eth_blockNumber",
   params: [],
+  apiInterface: "jsonrpc",
 };
 
 const cosmosRelay = {
-  method: "GET",
+  connectionType: "GET",
   url: "/cosmos/base/tendermint/v1beta1/blocks/latest",
 };
 
 const aptosRelay = {
-  method: "GET",
+  connectionType: "GET",
   url: "/",
 };
 
@@ -301,38 +294,28 @@ const chains: Array<ChainDesc> = [
   },
 ];
 
+const staging = "staging";
 const testnet = "testnet";
 
 const trkSz = 10;
-const sdkTestnetConfig: LavaSDKOptions = {
+const sdkTestnetConfig: LavaSDKOptionsLocal = {
   badge: {
     badgeServerAddress: process.env.NEXT_PUBLIC_BADGE_SERVER_ADDRESS || "",
     projectId: process.env.NEXT_PUBLIC_BADGE_PROJECT_ID || "",
   },
-  chainID: "",
-  rpcInterface: "",
+  chainIds: "",
   geolocation: "2",
 };
 
-const getConfig = (chain: ChainDesc) => {
-  let newConfig = structuredClone(sdkTestnetConfig);
-  newConfig.chainID = chain.chainId;
-  newConfig.rpcInterface = chain.rpcInterface;
+const getConfig = (chain: ChainDesc, env: string) => {
+  let config = sdkTestnetConfig;
+  let newConfig = structuredClone(config);
+  newConfig.chainIds = chain.chainId;
+
   return newConfig;
 };
 
 export default function Home() {
-  const [filter, setFilter] = useState('');
-
-  const filterChain = (f: string) => {
-    if (f == filter) {
-      setFilter('');
-    } else {
-      setFilter(f);
-    }
-  }
-
-
   return (
     <main className="container mx-auto p-8 max-w-5xl">
       <Title>All blocks</Title>
@@ -346,25 +329,19 @@ export default function Home() {
         <TabPanels>
           <TabPanel>
             <Grid numItemsMd={3} className="mt-6 gap-6">
-              {chains.map((chain) => {
-                if ((filter == '') || ((filter != '') && (chain.chainId == filter))) {
-                  return (
-                    <Chain
-                      key={chain.chainId}
-                      chainId={chain.chainId}
-                      name={chain.name}
-                      testnet={chain.testnet}
-                      relay={chain.relay}
-                      relayParse={chain.relayParse}
-                      trkSz={trkSz}
-                      blockTimeSeconds={chain.blockTimeSeconds}
-                      sdkConfig={getConfig(chain)}
-                      env={testnet}
-                      filterChain={filterChain}
-                    />
-                  )
-                }
-              })}
+              {chains.map((chain) => (
+                <Chain
+                  key={chain.chainId}
+                  name={chain.name}
+                  testnet={chain.testnet}
+                  relay={chain.relay}
+                  relayParse={chain.relayParse}
+                  trkSz={trkSz}
+                  blockTimeSeconds={chain.blockTimeSeconds}
+                  sdkConfig={getConfig(chain, testnet)}
+                  env={testnet}
+                />
+              ))}
             </Grid>
           </TabPanel>
         </TabPanels>
